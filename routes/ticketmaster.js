@@ -2,6 +2,8 @@ var express = require("express");
 var router = express.Router();
 var axios = require("axios");
 
+require("dotenv").config();
+
 var knex = require("../knex/knex.js");
 
 function authDataService() {
@@ -26,7 +28,9 @@ router.get("/:keyword?", function(req, res, next) {
 
   return axios
     .get(
-      `https://app.ticketmaster.com/discovery/v2/events.json?apikey=63auBgbaIB94JdWuUEUQMj4eKzkjF18A&keyword=${keyword}`
+      `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${
+        process.env.TICKETMASTER_API_KEY
+      }&keyword=${keyword}`
     )
     .then(response => {
       //console.log(response.data);
