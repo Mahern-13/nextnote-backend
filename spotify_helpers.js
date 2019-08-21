@@ -92,19 +92,32 @@ function getSpotifyTokenFromOAuth(authCode) {
     })
     .then(response => {
       authData = response.data;
+      console.log("auth data", authData);
+      const { access_token } = response.data;
       var currentTime = new Date();
       currentTime = (
         currentTime.getTime() +
         authData.expires_in * 1000
       ).toString();
       authData.expiresAt = currentTime;
-      return knex("authentication_info").insert({
-        app_name: "spotify-oauth",
-        auth_data: authData
-      });
+
+      return axios
+        .get("https://api.spotify.com/v1/me", {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+        })
+        .then(response => ({ id: response.data.id, authData }));
     })
-    .then(response => {
-      return authData;
+    .then(async ({ id, authData }) => {
+      await knex("authentication_info").insert({
+        spotifyUserId: id,
+        app_name: "spotify-oauth",
+        auth_data: authData,
+        access_token: authData.access_token
+      });
+      return id;
     })
     .catch(err => console.log(err));
 }
@@ -166,21 +179,35 @@ function refreshSpotifyToken(authData) {
     });
 }
 
-function getSpotifyOAuthToken() {
+/**
+ * Client sends an api call to check if a user is authenticated
+ * if yes then gets a token
+ * otherwise was not authenticated so display login page
+ * Login page on the client side
+ * User clicks login button
+ * User is redirected to /spotify/login
+ * User logs in with spotify and is redirected to callback route
+ * User is redirected back to the website
+ * Client sends an api call to check if a user is authenticated
+ * if yes then gets a token
+ * otherwise was not authenticated so display login page
+ */
+
+function getSpotifyOAuthToken(id, access_token) {
   return knex
     .select("auth_data")
     .from("authentication_info")
-    .where({ app_name: "spotify-oauth" })
+    .where({ spotifyUserId: id })
+    .where({ access_token })
     .then(rows => {
+      console.log("rows", rows);
       var expiryTime = new Date(parseInt(rows[0].auth_data.expiresAt));
       var currentTime = new Date();
       if (!expiryTime || expiryTime <= currentTime) {
+        // TODO: Check if refreshing a token works
         return refreshSpotifyToken(rows[0]);
       }
       return rows[0].auth_data;
-    })
-    .then(response => {
-      return response;
     });
 }
 

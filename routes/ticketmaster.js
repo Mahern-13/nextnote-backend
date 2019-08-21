@@ -22,21 +22,20 @@ function authDataService() {
 /* GET users listing. */
 router.get("/:keyword?", function(req, res, next) {
   const { keyword } = req.params;
-  console.log("params", keyword, req.params);
-  return authDataService()
-    .then(token => {
-      return axios
-        .get(
-          `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${token}&keyword=${keyword}`
-        )
-        .then(response => {
-          //console.log(response.data);
-          //console.log(response.data.explanation);
-          console.log("response", response);
-          const { _embedded } = response.data;
-          res.send(_embedded ? _embedded.events : []);
-        });
+  //console.log("params", keyword, req.params);
+
+  return axios
+    .get(
+      `https://app.ticketmaster.com/discovery/v2/events.json?apikey=63auBgbaIB94JdWuUEUQMj4eKzkjF18A&keyword=${keyword}`
+    )
+    .then(response => {
+      //console.log(response.data);
+      //console.log(response.data.explanation);
+      //console.log("response", response);
+      const { _embedded } = response.data;
+      res.send(_embedded ? _embedded.events : []);
     })
+
     .catch(err => {
       console.log("ERROR here", err);
       res.status(500).send("Error");
