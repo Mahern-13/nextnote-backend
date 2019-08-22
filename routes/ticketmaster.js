@@ -31,7 +31,11 @@ router.get("/:keyword?", function(req, res, next) {
     })
     .catch(err => {
       console.log("ERROR here", err);
-      res.status(500).send("Error");
+      if (err.response && err.response.status === 429) {
+        res.status(429).send("Error");
+      } else {
+        res.status(500).send("Error");
+      }
     });
 });
 

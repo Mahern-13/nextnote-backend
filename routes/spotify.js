@@ -27,7 +27,6 @@ router.get("/callback", async function(req, res, next) {
 
 router.post("/access_token", async (req, res, next) => {
   const { id } = req.body;
-  console.log("in access token", id);
   if (!id) {
     res.status(400).send({ message: "Id is required" });
     return;
@@ -42,8 +41,8 @@ router.post("/access_token", async (req, res, next) => {
 
 router.post("/api-using-oauth/:id?", function(req, res, next) {
   var artistId = req.params.id || "4dpARuHxo51G3z768sgnrY";
-  const { userId, access_token } = req.body;
-  getSpotifyOAuthToken(userId, access_token)
+  const { userId } = req.body;
+  getSpotifyOAuthToken(userId)
     .then(authData => {
       if (authData === "refreshFailed") {
         res.send({ error: "refresh_token_failed" });
@@ -71,10 +70,26 @@ router.post("/api-using-oauth/:id?", function(req, res, next) {
     });
 });
 
+router.get("/search/:query?", function(req, res, next) {
+  const { userId } = req.query;
+  var query = req.params.query || "Adele";
+  getSpotifyOAuthToken(userId).then(authData => {
+    url = `https://api.spotify.com/v1/search?q=${query}&type=artist&limit=1`;
+    return axios
+      .get(url, {
+        headers: {
+          Authorization: "Bearer " + authData.access_token
+        }
+      })
+      .then(response => res.send(response.data.artists.items[0]))
+      .catch(err => console.log(err));
+  });
+});
+
 router.get("/:id?", function(req, res, next) {
   var id = req.params.id || "4dpARuHxo51G3z768sgnrY";
-  getSpotifyToken().then(authData => {
-    axios
+  getSpotifyOToken().then(authData => {
+    return axios
       .all([
         getSpotifyArtist(id, authData),
         getSpotifyTopTen(id, authData),

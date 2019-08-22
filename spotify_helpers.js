@@ -92,7 +92,6 @@ function getSpotifyTokenFromOAuth(authCode) {
     })
     .then(response => {
       authData = response.data;
-      console.log("auth data", authData);
       const { access_token } = response.data;
       var currentTime = new Date();
       currentTime = (
@@ -193,14 +192,12 @@ function refreshSpotifyToken(authData) {
  * otherwise was not authenticated so display login page
  */
 
-function getSpotifyOAuthToken(id, access_token) {
+function getSpotifyOAuthToken(id) {
   return knex
     .select("auth_data")
     .from("authentication_info")
     .where({ spotifyUserId: id })
-    .where({ access_token })
     .then(rows => {
-      console.log("rows", rows);
       var expiryTime = new Date(parseInt(rows[0].auth_data.expiresAt));
       var currentTime = new Date();
       if (!expiryTime || expiryTime <= currentTime) {
