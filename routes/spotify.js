@@ -43,7 +43,6 @@ router.post("/access_token", async (req, res, next) => {
 router.post("/api-using-oauth/:id?", function(req, res, next) {
   var artistId = req.params.id || "4dpARuHxo51G3z768sgnrY";
   const { userId, access_token } = req.body;
-  console.log("user id", userId);
   getSpotifyOAuthToken(userId, access_token)
     .then(authData => {
       if (authData === "refreshFailed") {
