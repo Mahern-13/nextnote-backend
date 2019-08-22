@@ -16,21 +16,24 @@ router.get("/:keyword?", function(req, res, next) {
       }&keyword=${keyword}`
     )
     .then(response => {
-      const artistId = response.data._embedded.attractions[0].id;
-      return axios
-        .get(
-          `https://app.ticketmaster.com/discovery/v2/events?apikey=${
-            process.env.TICKETMASTER_API_KEY
-          }&attractionId=${artistId}&locale=*&size=4`
-        )
-        .then(response => {
-          const { _embedded } = response.data;
-          const extractedEvents = _embedded ? _embedded.events : null;
-          res.send(extractedEvents);
-        });
+      if (response.data._embedded) {
+        const artistId = response.data._embedded.attractions[0].id;
+        return axios
+          .get(
+            `https://app.ticketmaster.com/discovery/v2/events?apikey=${
+              process.env.TICKETMASTER_API_KEY
+            }&attractionId=${artistId}&locale=*&size=4`
+          )
+          .then(response => {
+            const { _embedded } = response.data;
+            const extractedEvents = _embedded ? _embedded.events : null;
+            res.send(extractedEvents);
+          });
+      } else {
+        res.send(null);
+      }
     })
     .catch(err => {
-      console.log("ERROR here", err);
       if (err.response && err.response.status === 429) {
         res.status(429).send("Error");
       } else {
