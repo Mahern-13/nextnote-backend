@@ -10,8 +10,7 @@ var {
   getSpotifyTopTen,
   getSpotifyRelatedArtists
 } = require("../spotify_helpers");
-const authController = require("../controllers/authController");
-
+const spotifyController = require("../controllers/spotifyController/spotifyController");
 /* GET users listing. */
 
 router.get("/login", function(req, res, next) {
@@ -25,19 +24,7 @@ router.get("/callback", async function(req, res, next) {
   res.redirect(`http://localhost:4000?spotify_auth=true&id=${id}`);
 });
 
-router.post("/access_token", async (req, res, next) => {
-  const { id } = req.body;
-  if (!id) {
-    res.status(400).send({ message: "Id is required" });
-    return;
-  }
-  const [response, error] = await authController.getAccessToken(id);
-  if (error) {
-    res.status(401).send("Unauthorised");
-    return;
-  }
-  res.send(response);
-});
+router.post("/access_token", spotifyController.access_token);
 
 router.post("/api-using-oauth/:id?", function(req, res, next) {
   var artistId = req.params.id || "4dpARuHxo51G3z768sgnrY";
@@ -88,7 +75,7 @@ router.get("/search/:query?", function(req, res, next) {
 
 router.get("/:id?", function(req, res, next) {
   var id = req.params.id || "4dpARuHxo51G3z768sgnrY";
-  getSpotifyOToken().then(authData => {
+  getSpotifyToken().then(authData => {
     return axios
       .all([
         getSpotifyArtist(id, authData),

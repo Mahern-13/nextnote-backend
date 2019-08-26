@@ -6,7 +6,7 @@ var {
 var knex = require("./knex/knex.js");
 var axios = require("axios");
 var qs = require("querystring");
-
+const SpotifyModel = require("./models/SpotifyModel");
 function setSpotifyToken() {
   var url = "https://accounts.spotify.com/api/token";
   var credentials = spotifyClientId + ":" + spotifyClientSecret;
@@ -34,10 +34,7 @@ function setSpotifyToken() {
     .then(total => {
       total = parseInt(total[0].count);
       if (total == 0) {
-        return knex("authentication_info").insert({
-          app_name: "spotify",
-          auth_data: authData
-        });
+        return SpotifyModel.insertAuthData("spotify", authData);
       } else {
         return knex("authentication_info")
           .where({ app_name: "spotify" })

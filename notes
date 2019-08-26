@@ -1,0 +1,7 @@
+Put logic for communicating with database in 'models' and call model methods from controllers
+
+When registering routes just pass controller methods to keep your routes definition lean and clean (easier to scan through)
+
+In larger apps you might have additional folders like 'api', 'services', 'middlewares', 'utils', etc.
+
+Read through express best practices - https://expressjs.com/en/advanced/best-practice-security.html
