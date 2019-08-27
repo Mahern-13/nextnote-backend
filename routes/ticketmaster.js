@@ -4,8 +4,6 @@ var axios = require("axios");
 
 require("dotenv").config();
 
-var knex = require("../knex/knex.js");
-
 /* GET users listing. */
 router.get("/:keyword?", function(req, res, next) {
   const { keyword } = req.params;
@@ -18,7 +16,7 @@ router.get("/:keyword?", function(req, res, next) {
         const artistId = response.data._embedded.attractions[0].id;
         return axios
           .get(
-            `https://app.ticketmaster.com/discovery/v2/events?apikey=${process.env.TICKETMASTER_API_KEY}&attractionId=${artistId}&locale=*&size=3`
+            `https://app.ticketmaster.com/discovery/v2/events?apikey=${process.env.TICKETMASTER_API_KEY}&attractionId=${artistId}&locale=*&sort=date,name,asc&size=3`
           )
           .then(response => {
             const { _embedded } = response.data;
