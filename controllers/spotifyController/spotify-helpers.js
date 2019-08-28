@@ -39,8 +39,8 @@ function setSpotifyToken() {
     .then(() => {
       return authData;
     })
-    .catch(error => {
-      console.log(error);
+    .catch(err => {
+      console.log(err);
     });
 }
 
@@ -60,7 +60,8 @@ function getSpotifyToken() {
     })
     .then(response => {
       return response;
-    });
+    })
+    .catch(err => console.log(err));
 }
 
 function getSpotifyTokenFromOAuth(authCode) {
@@ -115,9 +116,11 @@ function getSpotifyAuthorizeUrl() {
 }
 
 function handleSpotifyCallback(authCode) {
-  return SpotifyModel.handleCallBack("spotify-oauth").then(() => {
-    return getSpotifyTokenFromOAuth(authCode);
-  });
+  return SpotifyModel.handleCallBack("spotify-oauth")
+    .then(() => {
+      return getSpotifyTokenFromOAuth(authCode);
+    })
+    .catch(err => console.log(err));
 }
 
 function refreshSpotifyToken(authData) {
@@ -158,14 +161,16 @@ function refreshSpotifyToken(authData) {
 }
 
 function getSpotifyOAuthToken(id) {
-  return SpotifyModel.getAccessToken(id).then(rows => {
-    var expiryTime = new Date(parseInt(rows[0].auth_data.expiresAt));
-    var currentTime = new Date();
-    if (!expiryTime || expiryTime <= currentTime) {
-      return refreshSpotifyToken(rows[0]);
-    }
-    return rows[0].auth_data;
-  });
+  return SpotifyModel.getAccessToken(id)
+    .then(rows => {
+      var expiryTime = new Date(parseInt(rows[0].auth_data.expiresAt));
+      var currentTime = new Date();
+      if (!expiryTime || expiryTime <= currentTime) {
+        return refreshSpotifyToken(rows[0]);
+      }
+      return rows[0].auth_data;
+    })
+    .catch(err => console.log(err));
 }
 
 function getSpotifyArtist(id, authData) {

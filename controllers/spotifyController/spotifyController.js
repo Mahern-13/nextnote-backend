@@ -39,10 +39,9 @@ const login = function(req, res, next) {
 const apiUsingOauth = function(req, res, next) {
   var artistId = req.params.id || "4dpARuHxo51G3z768sgnrY";
   const { userId } = req.body;
-  getSpotifyOAuthToken(userId)
+  return getSpotifyOAuthToken(userId)
     .then(authData => {
       if (authData === "refreshFailed") {
-        console.log("error in refresh");
         res.send({ error: "refresh_token_failed" });
         return;
       }
@@ -54,17 +53,18 @@ const apiUsingOauth = function(req, res, next) {
         ])
         .then(
           axios.spread((currentArtist, topTracks, relatedArtists) => {
-            console.log("results", currentArtist, topTracks, relatedArtists);
             res.send({
               currentArtist,
               topTracks,
               relatedArtists
             });
           })
-        );
+        )
+        .catch(err => {
+          res.status(500).send(err.message);
+        });
     })
     .catch(err => {
-      console.log("hey I errored out", err);
       res.status(500).send(err.message);
     });
 };
@@ -72,39 +72,41 @@ const apiUsingOauth = function(req, res, next) {
 const search = function(req, res, next) {
   const { userId } = req.query;
   var query = req.params.query || "Adele";
-  getSpotifyOAuthToken(userId).then(authData => {
-    url = `https://api.spotify.com/v1/search?q=${query}&type=artist&limit=1`;
-    return axios
-      .get(url, {
-        headers: {
-          Authorization: "Bearer " + authData.access_token
-        }
-      })
-      .then(response => res.send(response.data.artists.items[0]))
-      .catch(err => console.log(err));
-  });
+  return getSpotifyOAuthToken(userId)
+    .then(authData => {
+      url = `https://api.spotify.com/v1/search?q=${query}&type=artist&limit=1`;
+      return axios
+        .get(url, {
+          headers: {
+            Authorization: "Bearer " + authData.access_token
+          }
+        })
+        .then(response => res.send(response.data.artists.items[0]));
+    })
+    .catch(err => console.log(err));
 };
 
 const apiWithoutOauth = function(req, res, next) {
   var id = req.params.id || "4dpARuHxo51G3z768sgnrY";
-  getSpotifyToken().then(authData => {
-    return axios
-      .all([
-        getSpotifyArtist(id, authData),
-        getSpotifyTopTen(id, authData),
-        getSpotifyRelatedArtists(id, authData)
-      ])
-      .then(
-        axios.spread((currentArtist, topTracks, relatedArtists) =>
-          res.send({
-            currentArtist,
-            topTracks,
-            relatedArtists
-          })
-        )
-      )
-      .catch(err => console.log(err));
-  });
+  return getSpotifyToken()
+    .then(authData => {
+      return axios
+        .all([
+          getSpotifyArtist(id, authData),
+          getSpotifyTopTen(id, authData),
+          getSpotifyRelatedArtists(id, authData)
+        ])
+        .then(
+          axios.spread((currentArtist, topTracks, relatedArtists) =>
+            res.send({
+              currentArtist,
+              topTracks,
+              relatedArtists
+            })
+          )
+        );
+    })
+    .catch(err => console.log(err));
 };
 
 module.exports = {
