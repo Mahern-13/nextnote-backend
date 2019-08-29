@@ -36,37 +36,48 @@ const login = function(req, res, next) {
   res.redirect(url);
 };
 
-const apiUsingOauth = function(req, res, next) {
+const fetchSpotifyData = (artistId, access_token) => {
+  return axios
+    .all([
+      getSpotifyArtist(artistId, access_token),
+      getSpotifyTopTen(artistId, access_token),
+      getSpotifyRelatedArtists(artistId, access_token)
+    ])
+    .then(
+      axios.spread((currentArtist, topTracks, relatedArtists) => {
+        return {
+          currentArtist,
+          topTracks,
+          relatedArtists
+        };
+      })
+    );
+};
+
+const getSpotifyData = function(req, res, next) {
   var artistId = req.params.id || "4dpARuHxo51G3z768sgnrY";
-  const { userId } = req.body;
-  return getSpotifyOAuthToken(userId)
-    .then(authData => {
-      if (authData === "refreshFailed") {
-        res.send({ error: "refresh_token_failed" });
-        return;
-      }
-      return axios
-        .all([
-          getSpotifyArtist(artistId, authData),
-          getSpotifyTopTen(artistId, authData),
-          getSpotifyRelatedArtists(artistId, authData)
-        ])
-        .then(
-          axios.spread((currentArtist, topTracks, relatedArtists) => {
-            res.send({
-              currentArtist,
-              topTracks,
-              relatedArtists
-            });
-          })
-        )
-        .catch(err => {
-          res.status(500).send(err.message);
-        });
-    })
-    .catch(err => {
-      res.status(500).send(err.message);
-    });
+  const { userId, access_token } = req.body;
+  try {
+    return fetchSpotifyData(artistId, access_token)
+      .then(response => res.send(response))
+      .catch(async err => {
+        if (err.response.status === 401) {
+          const authData = await getSpotifyOAuthToken(userId);
+
+          if (authData === "refreshFailed") {
+            res.send({ error: "refresh_token_failed" });
+            return;
+          }
+
+          return fetchSpotifyData(artistId, authData.access_token).then(
+            response => res.send(response)
+          );
+        }
+        res.status(500).send(err.message);
+      });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 };
 
 const search = function(req, res, next) {
@@ -74,7 +85,7 @@ const search = function(req, res, next) {
   var query = req.params.query || "Adele";
   return getSpotifyOAuthToken(userId)
     .then(authData => {
-      url = `https://api.spotify.com/v1/search?q=${query}&type=artist&limit=1`;
+      const url = `https://api.spotify.com/v1/search?q=${query}&type=artist&limit=1`;
       return axios
         .get(url, {
           headers: {
@@ -113,7 +124,7 @@ module.exports = {
   access_token,
   callback,
   login,
-  apiUsingOauth,
+  getSpotifyData,
   search,
   apiWithoutOauth
 };

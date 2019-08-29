@@ -9,7 +9,7 @@ router.get("/callback", spotifyController.callback);
 
 router.post("/access_token", spotifyController.access_token);
 
-router.post("/api-using-oauth/:id?", spotifyController.apiUsingOauth);
+router.post("/get-spotify-data/:id?", spotifyController.getSpotifyData);
 
 router.get("/search/:query?", spotifyController.search);
 

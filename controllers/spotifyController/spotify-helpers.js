@@ -6,20 +6,21 @@ var {
 var axios = require("axios");
 var qs = require("querystring");
 const SpotifyModel = require("../../models/SpotifyModel");
+const credentials = Buffer.from(
+  spotifyClientId + ":" + spotifyClientSecret
+).toString("base64");
+const spotifyTokenUrl = "https://accounts.spotify.com/api/token";
+
 function setSpotifyToken() {
-  var url = "https://accounts.spotify.com/api/token";
-  var credentials = spotifyClientId + ":" + spotifyClientSecret;
-  credentials = Buffer.from(credentials).toString("base64");
   var authData = null;
   return axios
-    .post(url, qs.stringify({ grant_type: "client_credentials" }), {
+    .post(spotifyTokenUrl, qs.stringify({ grant_type: "client_credentials" }), {
       headers: {
         Authorization: "Basic " + credentials,
         "Content-Type": "application/x-www-form-urlencoded"
       }
     })
-    .then(response => {
-      authData = response.data;
+    .then(({ data: authData }) => {
       var currentTime = new Date();
       currentTime = (
         currentTime.getTime() +
@@ -30,11 +31,10 @@ function setSpotifyToken() {
     })
     .then(total => {
       total = parseInt(total[0].count);
-      if (total == 0) {
-        return SpotifyModel.insertAuthData("spotify", authData);
-      } else {
-        return SpotifyModel.updateAuthData("spotify", authData);
-      }
+      return SpotifyModel[total === 0 ? "insertAuthData" : "updateAuthData"](
+        "spotify",
+        authData
+      );
     })
     .then(() => {
       return authData;
@@ -47,25 +47,19 @@ function setSpotifyToken() {
 function getSpotifyToken() {
   return SpotifyModel.getAuthData("spotify")
     .then(rows => {
-      if (rows.length == 0) {
+      if (rows.length == 0) return setSpotifyToken();
+
+      var expiryTime = new Date(parseInt(rows[0].auth_data.expiresAt));
+      var currentTime = new Date();
+      if (!expiryTime || expiryTime <= currentTime) {
         return setSpotifyToken();
-      } else {
-        var expiryTime = new Date(parseInt(rows[0].auth_data.expiresAt));
-        var currentTime = new Date();
-        if (!expiryTime || expiryTime <= currentTime) {
-          return setSpotifyToken();
-        }
-        return rows[0].auth_data;
       }
-    })
-    .then(response => {
-      return response;
+      return rows[0].auth_data;
     })
     .catch(err => console.log(err));
 }
 
 function getSpotifyTokenFromOAuth(authCode) {
-  var url = "https://accounts.spotify.com/api/token";
   var params = {
     grant_type: "authorization_code",
     code: authCode,
@@ -74,7 +68,7 @@ function getSpotifyTokenFromOAuth(authCode) {
   var credentials = spotifyClientId + ":" + spotifyClientSecret;
   credentials = Buffer.from(credentials).toString("base64");
   return axios
-    .post(url, qs.stringify(params), {
+    .post(spotifyTokenUrl, qs.stringify(params), {
       headers: {
         Authorization: "Basic " + credentials,
         "Content-Type": "application/x-www-form-urlencoded"
@@ -125,17 +119,14 @@ function handleSpotifyCallback(authCode) {
 
 function refreshSpotifyToken(authData) {
   var refreshToken = authData.refresh_token;
-  var url = "https://accounts.spotify.com/api/token";
   var params = {
     grant_type: "refresh_token",
     refresh_token: refreshToken
   };
-  var credentials = spotifyClientId + ":" + spotifyClientSecret;
-  credentials = Buffer.from(credentials).toString("base64");
 
   var authData = null;
   return axios
-    .post(url, qs.stringify(params), {
+    .post(spotifyTokenUrl, qs.stringify(params), {
       headers: {
         Authorization: "Basic " + credentials,
         "Content-Type": "application/x-www-form-urlencoded"
@@ -173,40 +164,37 @@ function getSpotifyOAuthToken(id) {
     .catch(err => console.log(err));
 }
 
-function getSpotifyArtist(id, authData) {
-  url = `https://api.spotify.com/v1/artists/${id}`;
+function getSpotifyArtist(id, access_token) {
   return axios
-    .get(url, {
+    .get(`https://api.spotify.com/v1/artists/${id}`, {
       headers: {
-        Authorization: "Bearer " + authData.access_token
+        Authorization: "Bearer " + access_token
       }
     })
-    .then(response => response.data)
-    .catch(err => console.log(err));
+    .then(response => response.data);
 }
 
-function getSpotifyTopTen(id, authData) {
-  url = `https://api.spotify.com/v1/artists/${id}/top-tracks?country=from_token`;
+function getSpotifyTopTen(id, access_token) {
   return axios
-    .get(url, {
-      headers: {
-        Authorization: "Bearer " + authData.access_token
+    .get(
+      `https://api.spotify.com/v1/artists/${id}/top-tracks?country=from_token`,
+      {
+        headers: {
+          Authorization: "Bearer " + access_token
+        }
       }
-    })
-    .then(response => response.data)
-    .catch(err => console.log(err));
+    )
+    .then(response => response.data);
 }
 
-function getSpotifyRelatedArtists(id, authData) {
-  url = `https://api.spotify.com/v1/artists/${id}/related-artists`;
+function getSpotifyRelatedArtists(id, access_token) {
   return axios
-    .get(url, {
+    .get(`https://api.spotify.com/v1/artists/${id}/related-artists`, {
       headers: {
-        Authorization: "Bearer " + authData.access_token
+        Authorization: "Bearer " + access_token
       }
     })
-    .then(response => response.data)
-    .catch(err => console.log(err));
+    .then(response => response.data);
 }
 
 module.exports = {
