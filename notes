@@ -1,6 +1,0 @@
-In larger apps you might have additional folders like 'api', 'services', 'middlewares', 'utils', etc.
-
-Read through express best practices - https://expressjs.com/en/advanced/best-practice-security.html
-
-TODO:
-    1. Testing
