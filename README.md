@@ -22,5 +22,7 @@ DATABASE_PASSWORD=?
 ### Launching backend
 
 `npm install`
+<br/>
 `knex migrate:latest`
+<br/>
 `npm start`
