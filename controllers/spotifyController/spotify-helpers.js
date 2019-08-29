@@ -1,10 +1,10 @@
-var {
+const {
   spotifyClientId,
   spotifyClientSecret,
   spotifyRedirectUri
 } = require("../../config");
-var axios = require("axios");
-var qs = require("querystring");
+const axios = require("axios");
+const qs = require("querystring");
 const SpotifyModel = require("../../models/SpotifyModel");
 const credentials = Buffer.from(
   spotifyClientId + ":" + spotifyClientSecret
@@ -12,7 +12,7 @@ const credentials = Buffer.from(
 const spotifyTokenUrl = "https://accounts.spotify.com/api/token";
 
 function setSpotifyToken() {
-  var authData = null;
+  let authData = null;
   return axios
     .post(spotifyTokenUrl, qs.stringify({ grant_type: "client_credentials" }), {
       headers: {
@@ -21,7 +21,7 @@ function setSpotifyToken() {
       }
     })
     .then(({ data: authData }) => {
-      var currentTime = new Date();
+      let currentTime = new Date();
       currentTime = (
         currentTime.getTime() +
         authData.expires_in * 1000
@@ -49,8 +49,8 @@ function getSpotifyToken() {
     .then(rows => {
       if (rows.length == 0) return setSpotifyToken();
 
-      var expiryTime = new Date(parseInt(rows[0].auth_data.expiresAt));
-      var currentTime = new Date();
+      const expiryTime = new Date(parseInt(rows[0].auth_data.expiresAt));
+      const currentTime = new Date();
       if (!expiryTime || expiryTime <= currentTime) {
         return setSpotifyToken();
       }
@@ -60,13 +60,11 @@ function getSpotifyToken() {
 }
 
 function getSpotifyTokenFromOAuth(authCode) {
-  var params = {
+  const params = {
     grant_type: "authorization_code",
     code: authCode,
     redirect_uri: spotifyRedirectUri
   };
-  var credentials = spotifyClientId + ":" + spotifyClientSecret;
-  credentials = Buffer.from(credentials).toString("base64");
   return axios
     .post(spotifyTokenUrl, qs.stringify(params), {
       headers: {
@@ -75,9 +73,9 @@ function getSpotifyTokenFromOAuth(authCode) {
       }
     })
     .then(response => {
-      authData = response.data;
+      const authData = response.data;
       const { access_token } = response.data;
-      var currentTime = new Date();
+      let currentTime = new Date();
       currentTime = (
         currentTime.getTime() +
         authData.expires_in * 1000
@@ -101,7 +99,7 @@ function getSpotifyTokenFromOAuth(authCode) {
 }
 
 function getSpotifyAuthorizeUrl() {
-  var url =
+  const url =
     "https://accounts.spotify.com/authorize?response_type=code&client_id=" +
     spotifyClientId +
     "&redirect_uri=" +
@@ -118,13 +116,12 @@ function handleSpotifyCallback(authCode) {
 }
 
 function refreshSpotifyToken(authData) {
-  var refreshToken = authData.refresh_token;
-  var params = {
+  const refreshToken = authData.refresh_token;
+  const params = {
     grant_type: "refresh_token",
     refresh_token: refreshToken
   };
-
-  var authData = null;
+  console.log(authData);
   return axios
     .post(spotifyTokenUrl, qs.stringify(params), {
       headers: {
@@ -133,7 +130,7 @@ function refreshSpotifyToken(authData) {
       }
     })
     .then(response => {
-      var currentTime = new Date();
+      let currentTime = new Date();
       currentTime = (
         currentTime.getTime() +
         authData.expires_in * 1000
@@ -143,6 +140,7 @@ function refreshSpotifyToken(authData) {
       return SpotifyModel.updateOAuthData("spotify-oauth", authData);
     })
     .then(() => {
+      console.log("I'm authing", authData);
       return authData;
     })
     .catch(err => {
@@ -152,10 +150,11 @@ function refreshSpotifyToken(authData) {
 }
 
 function getSpotifyOAuthToken(id) {
+  console.log("I'm getting the Oauth");
   return SpotifyModel.getAccessToken(id)
     .then(rows => {
-      var expiryTime = new Date(parseInt(rows[0].auth_data.expiresAt));
-      var currentTime = new Date();
+      const expiryTime = new Date(parseInt(rows[0].auth_data.expiresAt));
+      const currentTime = new Date();
       if (!expiryTime || expiryTime <= currentTime) {
         return refreshSpotifyToken(rows[0]);
       }

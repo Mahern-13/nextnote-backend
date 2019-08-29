@@ -1,5 +1,5 @@
-var axios = require("axios");
-var {
+const axios = require("axios");
+const {
   getSpotifyToken,
   handleSpotifyCallback,
   getSpotifyAuthorizeUrl,
@@ -32,7 +32,7 @@ const callback = async function(req, res, next) {
 };
 
 const login = function(req, res, next) {
-  var url = getSpotifyAuthorizeUrl();
+  const url = getSpotifyAuthorizeUrl();
   res.redirect(url);
 };
 
@@ -55,7 +55,7 @@ const fetchSpotifyData = (artistId, access_token) => {
 };
 
 const getSpotifyData = function(req, res, next) {
-  var artistId = req.params.id || "4dpARuHxo51G3z768sgnrY";
+  const artistId = req.params.id || "4dpARuHxo51G3z768sgnrY";
   const { userId, access_token } = req.body;
   try {
     return fetchSpotifyData(artistId, access_token)
@@ -82,7 +82,7 @@ const getSpotifyData = function(req, res, next) {
 
 const search = function(req, res, next) {
   const { userId } = req.query;
-  var query = req.params.query || "Adele";
+  const query = req.params.query || "Adele";
   return getSpotifyOAuthToken(userId)
     .then(authData => {
       const url = `https://api.spotify.com/v1/search?q=${query}&type=artist&limit=1`;
@@ -98,7 +98,7 @@ const search = function(req, res, next) {
 };
 
 const apiWithoutOauth = function(req, res, next) {
-  var id = req.params.id || "4dpARuHxo51G3z768sgnrY";
+  const id = req.params.id || "4dpARuHxo51G3z768sgnrY";
   return getSpotifyToken()
     .then(authData => {
       return axios

@@ -1,4 +1,4 @@
-var knex = require("../knex/knex.js");
+const knex = require("../knex/knex.js");
 
 class SpotifyModel {
   insertAuthData(app_name, payload) {
