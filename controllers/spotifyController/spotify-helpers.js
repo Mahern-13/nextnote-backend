@@ -121,7 +121,6 @@ function refreshSpotifyToken(authData) {
     grant_type: "refresh_token",
     refresh_token: refreshToken
   };
-  console.log(authData);
   return axios
     .post(spotifyTokenUrl, qs.stringify(params), {
       headers: {
@@ -140,7 +139,6 @@ function refreshSpotifyToken(authData) {
       return SpotifyModel.updateOAuthData("spotify-oauth", authData);
     })
     .then(() => {
-      console.log("I'm authing", authData);
       return authData;
     })
     .catch(err => {
@@ -150,7 +148,6 @@ function refreshSpotifyToken(authData) {
 }
 
 function getSpotifyOAuthToken(id) {
-  console.log("I'm getting the Oauth");
   return SpotifyModel.getAccessToken(id)
     .then(rows => {
       const expiryTime = new Date(parseInt(rows[0].auth_data.expiresAt));
