@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  nextnote_db:
+    container_name: nextnote
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - '5432:5432'
+    volumes: 
+      - nextnote_db:/var/lib/postgresql/data
+volumes:
+  nextnote_db:
+    driver: local
