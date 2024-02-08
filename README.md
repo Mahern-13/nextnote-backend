@@ -1,28 +1,31 @@
-# artist-backend
+# Nextnote-Backend
 
-## Steps to run locally
+Nextnote-Backend is a node application to connect multiple rest API's to the Nextnote React frontend. 
 
-### DB and .env
+## Run Instructions
 
-create a pg db and then add the folowing references to the .env file
+Things you will need to run:
+Docker
+Knex
+Latest stable version of node and npm
+A spotify account
 
-(signup for spotify api key => https://developer.spotify.com/dashboard/)
-(signup for ticketmaster api key => https://developer.ticketmaster.com/)
-
-```.env
-SPOTIFY_CLIENT_ID=?
-SPOTIFY_CLIENT_SECRET=?
-SPOTIFY_REDIRECT_URI='http://localhost:3000/spotify/callback'
-TICKETMASTER_API_KEY=?
-DATABASE_NAME=?
-DATABASE_USER=?
-DATABASE_PASSWORD=?
+```
+npm install
+docker compose up -d
+npm install knex -g (if not already done)
+knex migrate:latest
+npm start
 ```
 
-### Launching backend
+## Usage
 
-`npm install`
-<br/>
-`knex migrate:latest`
-<br/>
-`npm start`
+```Run the frontend after initiating the backend and allow the user to see it work
+```
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first
+to discuss what you would like to change.
+
+Please make sure to update tests as appropriate.
